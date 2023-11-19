@@ -11,20 +11,29 @@
         }
       },
       {
-        "package": "Epoxy",
-        "repositoryURL": "https://github.com/airbnb/epoxy-ios.git",
+        "package": "AirbnbSwift",
+        "repositoryURL": "https://github.com/airbnb/swift",
         "state": {
           "branch": null,
-          "revision": "bc53da4def05eff869f96bedefda7e1a8fdcb199",
-          "version": "0.7.0"
+          "revision": "6900f5ab7ab7394ac85eb9da52b2528ee329b206",
+          "version": "1.0.4"
+        }
+      },
+      {
+        "package": "swift-argument-parser",
+        "repositoryURL": "https://github.com/apple/swift-argument-parser",
+        "state": {
+          "branch": null,
+          "revision": "fddd1c00396eed152c45a46bea9f47b98e59301d",
+          "version": "1.2.0"
         }
       },
       {
         "package": "swift-snapshot-testing",
         "repositoryURL": "https://github.com/pointfreeco/swift-snapshot-testing.git",
         "state": {
-          "branch": "main",
-          "revision": "88f6e2c0afe04221fcfb1601a2ecaad83115a05f",
+          "branch": null,
+          "revision": "0c2826f26d00ff5ddf2de92cb6b2139b0dd3d1ee",
           "version": null
         }
       }

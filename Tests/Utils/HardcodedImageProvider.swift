@@ -15,9 +15,13 @@ struct HardcodedImageProvider: AnimationImageProvider {
 
   func imageForAsset(asset _: ImageAsset) -> CGImage? {
     #if os(iOS)
-    return UIImage(named: imageName, in: .module, compatibleWith: nil)?.cgImage
+    return UIImage(named: imageName, in: .lottie, compatibleWith: nil)?.cgImage
     #else
     return nil
     #endif
+  }
+
+  func contentsGravity(for _: ImageAsset) -> CALayerContentsGravity {
+    .resizeAspectFill
   }
 }

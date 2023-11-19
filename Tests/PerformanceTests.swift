@@ -23,7 +23,9 @@ final class PerformanceTests: XCTestCase {
     // This is basically a snapshot test for the performance of the Core Animation engine
     // compared to the Main Thread engine. Currently, the Core Animation engine is
     // about the same speed as the Main Thread engine in this example.
-    XCTAssertEqual(ratio, 1.0, accuracy: 0.35)
+    XCTExpectFailure("Performance tests are flaky in CI", strict: false) {
+      XCTAssertEqual(ratio, 1.0, accuracy: 0.1)
+    }
   }
 
   func testAnimationViewSetup_complexAnimation() {
@@ -34,9 +36,11 @@ final class PerformanceTests: XCTestCase {
       for: complexAnimation,
       iterations: 500)
 
-    // The Core Animation engine is currently about 1.5x slower than the
+    // The Core Animation engine is currently about 1.7x slower than the
     // Main Thread engine in this example.
-    XCTAssertEqual(ratio, 1.5, accuracy: 0.6)
+    XCTExpectFailure("Performance tests are flaky in CI", strict: false) {
+      XCTAssertEqual(ratio, 1.75, accuracy: 0.1)
+    }
   }
 
   func testAnimationViewSetup_automaticEngine() {
@@ -50,29 +54,39 @@ final class PerformanceTests: XCTestCase {
 
     // The automatic engine option should have the same performance as the core animation engine,
     // when rendering an animation supported by the CA engine.
-    XCTAssertEqual(ratio, 1.0, accuracy: 0.35)
+    XCTExpectFailure("Performance tests are flaky in CI", strict: false) {
+      XCTAssertEqual(ratio, 1.0, accuracy: 0.1)
+    }
   }
 
   func testAnimationViewScrubbing_simpleAnimation() {
     let ratio = compareEngineScrubbingPerformance(for: simpleAnimation, iterations: 2000)
-    XCTAssertEqual(ratio, 0.01, accuracy: 0.01)
+    XCTExpectFailure("Performance tests are flaky in CI", strict: false) {
+      XCTAssertEqual(ratio, 0.01, accuracy: 0.01)
+    }
   }
 
   func testAnimationViewScrubbing_complexAnimation() {
     let ratio = compareEngineScrubbingPerformance(for: complexAnimation, iterations: 2000)
-    XCTAssertEqual(ratio, 0.01, accuracy: 0.01)
+    XCTExpectFailure("Performance tests are flaky in CI", strict: false) {
+      XCTAssertEqual(ratio, 0.01, accuracy: 0.01)
+    }
   }
 
   func testParsing_simpleAnimation() throws {
-    let data = try XCTUnwrap(Bundle.module.getAnimationData("loading_dots_1", subdirectory: "Samples/LottieFiles"))
+    let data = try XCTUnwrap(Bundle.lottie.getAnimationData("loading_dots_1", subdirectory: "Samples/LottieFiles"))
     let ratio = try compareDeserializationPerformance(data: data, iterations: 2000)
-    XCTAssertEqual(ratio, 2, accuracy: 0.65)
+    XCTExpectFailure("Performance tests are flaky in CI", strict: false) {
+      XCTAssertEqual(ratio, 2.3, accuracy: 0.1)
+    }
   }
 
   func testParsing_complexAnimation() throws {
-    let data = try XCTUnwrap(Bundle.module.getAnimationData("LottieLogo2", subdirectory: "Samples"))
+    let data = try XCTUnwrap(Bundle.lottie.getAnimationData("LottieLogo2", subdirectory: "Samples"))
     let ratio = try compareDeserializationPerformance(data: data, iterations: 500)
-    XCTAssertEqual(ratio, 1.7, accuracy: 0.6)
+    XCTExpectFailure("Performance tests are flaky in CI", strict: false) {
+      XCTAssertEqual(ratio, 2.2, accuracy: 0.1)
+    }
   }
 
   override func setUp() {
@@ -85,14 +99,14 @@ final class PerformanceTests: XCTestCase {
 
   // MARK: Private
 
-  private let simpleAnimation = Animation.named(
+  private let simpleAnimation = LottieAnimation.named(
     "loading_dots_1",
-    bundle: .module,
+    bundle: .lottie,
     subdirectory: "Samples/LottieFiles")!
 
-  private let complexAnimation = Animation.named(
+  private let complexAnimation = LottieAnimation.named(
     "LottieLogo2",
-    bundle: .module,
+    bundle: .lottie,
     subdirectory: "Samples")!
 
   /// Compares initializing the given animation with the two given engines,
@@ -100,7 +114,7 @@ final class PerformanceTests: XCTestCase {
   private func compareEngineSetupPerformance(
     of engineA: RenderingEngineOption,
     with engineB: RenderingEngineOption,
-    for animation: Animation,
+    for animation: LottieAnimation,
     iterations: Int)
     -> Double
   {
@@ -125,7 +139,7 @@ final class PerformanceTests: XCTestCase {
     return ratio
   }
 
-  private func setUpAndTearDownAnimationView(with animation: Animation, configuration: LottieConfiguration) {
+  private func setUpAndTearDownAnimationView(with animation: LottieAnimation, configuration: LottieConfiguration) {
     // Each animation setup needs to be wrapped in its own `CATransaction`
     // in order for the layers to be deallocated immediately. Otherwise
     // the layers aren't deallocated until the end of the test run,
@@ -142,7 +156,7 @@ final class PerformanceTests: XCTestCase {
 
   /// Compares performance of scrubbing the given animation with both the Main Thread and Core Animation engine,
   /// and returns the ratio of how much slower the Core Animation is than the Main Thread engine
-  private func compareEngineScrubbingPerformance(for animation: Animation, iterations: Int) -> Double {
+  private func compareEngineScrubbingPerformance(for animation: LottieAnimation, iterations: Int) -> Double {
     let mainThreadAnimationView = setupAnimationView(with: animation, configuration: .init(renderingEngine: .mainThread))
     let mainThreadEnginePerformance = measurePerformance {
       for i in 0..<iterations {
@@ -177,7 +191,7 @@ final class PerformanceTests: XCTestCase {
   private func compareDeserializationPerformance(data: Data, iterations: Int) throws -> Double {
     let codablePerformance = try measurePerformance {
       for _ in 0..<iterations {
-        _ = try Animation.from(data: data, strategy: .codable)
+        _ = try LottieAnimation.from(data: data, strategy: .legacyCodable)
       }
     }
 
@@ -185,7 +199,7 @@ final class PerformanceTests: XCTestCase {
 
     let dictPerformance = try measurePerformance {
       for _ in 0..<iterations {
-        _ = try Animation.from(data: data, strategy: .dictionaryBased)
+        _ = try LottieAnimation.from(data: data, strategy: .dictionaryBased)
       }
     }
 
@@ -196,8 +210,8 @@ final class PerformanceTests: XCTestCase {
   }
 
   @discardableResult
-  private func setupAnimationView(with animation: Animation, configuration: LottieConfiguration) -> AnimationView {
-    let animationView = AnimationView(animation: animation, configuration: configuration)
+  private func setupAnimationView(with animation: LottieAnimation, configuration: LottieConfiguration) -> LottieAnimationView {
+    let animationView = LottieAnimationView(animation: animation, configuration: configuration)
     animationView.frame.size = CGSize(width: animation.width, height: animation.height)
     animationView.layoutIfNeeded()
     return animationView

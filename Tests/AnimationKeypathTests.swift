@@ -6,6 +6,7 @@ import XCTest
 
 @testable import Lottie
 
+@MainActor
 final class AnimationKeypathTests: XCTestCase {
 
   // MARK: Internal
@@ -20,16 +21,37 @@ final class AnimationKeypathTests: XCTestCase {
     XCTAssertTrue(keypath.matches("Layer.**.Color"))
     XCTAssertTrue(keypath.matches("Layer.Shape Group.*.Color"))
     XCTAssertTrue(keypath.matches("Layer.*.*.Color"))
+    XCTAssertTrue(keypath.matches("**"))
+    XCTAssertTrue(keypath.matches("Layer.**"))
+    XCTAssertTrue(keypath.matches("Layer.**.Color"))
+    XCTAssertTrue(keypath.matches("Layer.**.Shape Group.**"))
+    XCTAssertTrue(keypath.matches("**.Layer.Shape Group.Stroke 1.Color"))
+    XCTAssertTrue(keypath.matches("**.Layer.Shape Group.Stroke 1.**.Color"))
 
     XCTAssertFalse(keypath.matches("Layer.*.Color"))
-    XCTAssertFalse(keypath.matches("**.Layer.Shape Group.Stroke 1.Color"))
     XCTAssertFalse(keypath.matches("*.Layer.Shape Group.Stroke 1.Color"))
+    XCTAssertFalse(keypath.matches("*.Layer.Shape Group.Stroke 1.*.Color"))
     XCTAssertFalse(keypath.matches("Layer.Shape Group.Stroke 1.Color.*"))
     XCTAssertFalse(keypath.matches("Layer.Shape Group.Stroke 1.Color.**"))
+
+    let keypath2 = AnimationKeypath(keypath: "pin.Group 1.fill-primary.Color")
+    XCTAssertTrue(keypath2.matches("**.*primary.**.Color"))
+    XCTAssertTrue(keypath2.matches("**.*primary.Color"))
+    XCTAssertFalse(keypath2.matches("*primary.**.Color"))
+
+    let keypath3 = AnimationKeypath(keypath: "fill-primary.Stroke 1.Color")
+    XCTAssertTrue(keypath3.matches("**.*primary.**.Color"))
+    XCTAssertFalse(keypath3.matches("**.*primary.Color"))
+    XCTAssertTrue(keypath3.matches("*primary.**.Color"))
+
+    let keypath4 = AnimationKeypath(keypath: "Ellipse 1-composition.Ellipse 1-stroke.Ellipse 1-stroke.Stroke 1.Color")
+    XCTAssertTrue(keypath4.matches("**.Stroke 1.**.Color"))
+    XCTAssertTrue(keypath4.matches("**.Stroke 1.Color"))
+    XCTAssertFalse(keypath4.matches("**.Stroke 1.*.Color"))
   }
 
   func testLayerForKeypath() {
-    let animationView = AnimationView(
+    let animationView = LottieAnimationView(
       animation: Samples.animation(named: "Boat_Loader"),
       configuration: LottieConfiguration(renderingEngine: .mainThread))
 
@@ -39,27 +61,30 @@ final class AnimationKeypathTests: XCTestCase {
     XCTAssertNotNil(animationView.animationLayer?.layer(for: "Success.*.Fish1Tail 7"))
   }
 
-  func testMainThreadEngineKeypathLogging() {
-    snapshotHierarchyKeypaths(
+  func testMainThreadEngineKeypathLogging() async {
+    await snapshotHierarchyKeypaths(
       animationName: "Switch",
       configuration: LottieConfiguration(renderingEngine: .mainThread))
   }
 
-  func testCoreAnimationEngineKeypathLogging() {
-    snapshotHierarchyKeypaths(
+  func testCoreAnimationEngineKeypathLogging() async {
+    await snapshotHierarchyKeypaths(
       animationName: "Switch",
       configuration: LottieConfiguration(renderingEngine: .coreAnimation))
 
-    snapshotHierarchyKeypaths(
+    await snapshotHierarchyKeypaths(
       animationName: "Issues/issue_1664",
       configuration: LottieConfiguration(renderingEngine: .coreAnimation))
   }
 
   /// The Core Animation engine supports a subset of the keypaths supported by the Main Thread engine.
   /// All keypaths that are supported in the Core Animation engine should also be supported by the Main Thread engine.
-  func testCoreAnimationEngineKeypathCompatibility() {
-    let mainThreadKeypaths = Set(hierarchyKeypaths(animationName: "Switch", configuration: .init(renderingEngine: .mainThread)))
-    let coreAnimationKeypaths = hierarchyKeypaths(animationName: "Switch", configuration: .init(renderingEngine: .coreAnimation))
+  func testCoreAnimationEngineKeypathCompatibility() async {
+    let mainThreadKeypaths =
+      Set(await hierarchyKeypaths(animationName: "Switch", configuration: .init(renderingEngine: .mainThread)))
+    let coreAnimationKeypaths = await hierarchyKeypaths(
+      animationName: "Switch",
+      configuration: .init(renderingEngine: .coreAnimation))
 
     for coreAnimationKeypath in coreAnimationKeypaths {
       XCTAssert(
@@ -78,8 +103,9 @@ final class AnimationKeypathTests: XCTestCase {
     configuration: LottieConfiguration,
     function: String = #function,
     line: UInt = #line)
+    async
   {
-    let hierarchyKeypaths = hierarchyKeypaths(animationName: animationName, configuration: configuration)
+    let hierarchyKeypaths = await hierarchyKeypaths(animationName: animationName, configuration: configuration)
 
     assertSnapshot(
       matching: hierarchyKeypaths.sorted().joined(separator: "\n"),
@@ -89,15 +115,11 @@ final class AnimationKeypathTests: XCTestCase {
       line: line)
   }
 
-  private func hierarchyKeypaths(animationName: String, configuration: LottieConfiguration) -> [String] {
-    var printedMessages = [String]()
-    let logger = LottieLogger(info: { message in
-      printedMessages.append(message())
-    })
-
-    let animationView = SnapshotConfiguration.makeAnimationView(for: animationName, configuration: configuration, logger: logger)
-    animationView?.logHierarchyKeypaths()
-    return Array(printedMessages[1...])
+  private func hierarchyKeypaths(animationName: String, configuration: LottieConfiguration) async -> [String] {
+    let animationView = await SnapshotConfiguration.makeAnimationView(
+      for: animationName,
+      configuration: configuration)
+    return animationView?.allHierarchyKeypaths() ?? []
   }
 
 }

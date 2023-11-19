@@ -7,8 +7,8 @@
 
 import Difference
 import Foundation
-import Lottie
 import XCTest
+@testable import Lottie
 
 // MARK: - ParsingTests
 
@@ -16,10 +16,12 @@ final class ParsingTests: XCTestCase {
 
   func testParsingIsTheSameForBothImplementations() throws {
     for url in Samples.sampleAnimationURLs {
+      guard url.pathExtension == "json" else { continue }
+
       do {
         let data = try Data(contentsOf: url)
-        let codableAnimation = try Animation.from(data: data, strategy: .codable)
-        let dictAnimation = try Animation.from(data: data, strategy: .dictionaryBased)
+        let codableAnimation = try LottieAnimation.from(data: data, strategy: .legacyCodable)
+        let dictAnimation = try LottieAnimation.from(data: data, strategy: .dictionaryBased)
 
         XCTAssertNoDiff(codableAnimation, dictAnimation)
       } catch {

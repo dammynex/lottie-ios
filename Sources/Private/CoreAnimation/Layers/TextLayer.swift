@@ -36,6 +36,31 @@ final class TextLayer: BaseCompositionLayer {
 
   // MARK: Internal
 
+  override func setupAnimations(context: LayerAnimationContext) throws {
+    try super.setupAnimations(context: context)
+    let textAnimationContext = context.addingKeypathComponent(textLayerModel.name)
+
+    let sourceText = try textLayerModel.text.exactlyOneKeyframe(
+      context: textAnimationContext,
+      description: "text layer text")
+
+    // Prior to Lottie 4.3.0 the Core Animation rendering engine always just used `LegacyAnimationTextProvider`
+    // but incorrectly called it with the full keypath string, unlike the Main Thread rendering engine
+    // which only used the last component of the keypath. Starting in Lottie 4.3.0 we use `AnimationKeypathTextProvider`
+    // instead if implemented.
+    if let keypathTextValue = context.textProvider.text(for: textAnimationContext.currentKeypath, sourceText: sourceText.text) {
+      renderLayer.text = keypathTextValue
+    } else if let legacyTextProvider = context.textProvider as? LegacyAnimationTextProvider {
+      renderLayer.text = legacyTextProvider.textFor(
+        keypathName: textAnimationContext.currentKeypath.fullPath,
+        sourceText: sourceText.text)
+    } else {
+      renderLayer.text = sourceText.text
+    }
+
+    renderLayer.sizeToFit()
+  }
+
   func configureRenderLayer(with context: LayerContext) throws {
     // We can't use `CATextLayer`, because it doesn't support enough features we use.
     // Instead, we use the same `CoreTextRenderLayer` (with a custom `draw` implementation)
@@ -54,7 +79,6 @@ final class TextLayer: BaseCompositionLayer {
         """)
     }
 
-    renderLayer.text = text.text
     renderLayer.font = context.fontProvider.fontFor(family: text.fontFamily, size: CGFloat(text.fontSize))
 
     renderLayer.alignment = text.justification.textAlignment

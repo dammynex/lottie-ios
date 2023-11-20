@@ -54,6 +54,19 @@ public final class CompatibleAnimation: NSObject {
     super.init()
   }
   
+  @objc
+  public init(
+    name: String,
+    bundle: Bundle = Bundle.main)
+  {
+    self.name = name
+    self.subdirectory = nil
+    self.bundle = bundle
+    self.filepath = nil
+    self.json = nil
+    super.init()
+  }
+  @objc
   public init(
     name: String,
     subdirectory: String? = nil,

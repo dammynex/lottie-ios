@@ -70,7 +70,7 @@ public final class CompatibleAnimation: NSObject {
   internal var animation: LottieAnimation? {
     if let json = json {
       guard let jsonData = json.data(using: .utf8) else { return nil }
-      return try? JSONDecoder().decode(Animation.self, from: jsonData)
+      return try? JSONDecoder().decode(LottieAnimation.self, from: jsonData)
     } else if let filepath = filepath {
       return LottieAnimation.filepath(filepath)
     } else if let name = name, let bundle = bundle {

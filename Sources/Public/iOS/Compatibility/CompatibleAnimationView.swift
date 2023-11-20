@@ -87,9 +87,18 @@ public final class CompatibleAnimation: NSObject {
       guard let jsonData = json.data(using: .utf8) else { return nil }
       return try? JSONDecoder().decode(LottieAnimation.self, from: jsonData)
     } else if let filepath = filepath {
-      return LottieAnimation.filepath(filepath)
+      if (filepath.hasSuffix(".lottie")) {
+        return try? DotLottieFile.SynchronouslyBlockingCurrentThread.loadedFrom(filepath: filepath).get().animation(at: 0)?.animation;
+      } else {
+        return LottieAnimation.filepath(filepath)
+
+      }
     } else if let name = name, let bundle = bundle {
-      return LottieAnimation.named(name, bundle: bundle, subdirectory: subdirectory)
+      if (name.hasSuffix(".lottie")) {
+        return try? DotLottieFile.SynchronouslyBlockingCurrentThread.named(name, bundle: bundle).get().animation(at: 0)?.animation;
+      } else {
+        return LottieAnimation.named(name, bundle: bundle, subdirectory: subdirectory)
+      }
     }
     return nil
   }

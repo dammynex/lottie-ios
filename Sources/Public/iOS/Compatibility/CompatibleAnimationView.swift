@@ -39,6 +39,7 @@ public final class CompatibleAnimation: NSObject {
     self.filepath = filepath
     self.bundle = nil
     self.name = nil
+    self.subdirectory = nil
     self.json = nil
     super.init()
   }
@@ -48,6 +49,7 @@ public final class CompatibleAnimation: NSObject {
     self.filepath = nil
     self.bundle = nil
     self.name = nil
+    self.subdirectory = nil
     self.json = json
     super.init()
   }

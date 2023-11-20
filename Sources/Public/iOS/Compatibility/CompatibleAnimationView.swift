@@ -249,7 +249,7 @@ public final class CompatibleAnimationView: UIView {
   }
   
   @objc
-  public var animation: Animation? {
+  public var animation: LottieAnimation? {
     didSet {
       animationView.animation = animation
     }

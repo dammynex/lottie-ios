@@ -8,12 +8,13 @@
 import Foundation
 /// An Objective-C compatible wrapper around Lottie's AnimationKeypath
 @objc
+@objcMembers
 public class CompatibleLottieLogger: NSObject {
 
   // MARK: Lifecycle
   
   @objc
-  func overrideLottieLogger()
+  public func overrideLottieLogger()
   {
     LottieLogger.shared =  LottieLogger(assert: { condition, message, file, line in }, assertionFailure: { message, file, line in })
   }

@@ -13,6 +13,7 @@ public final class CompatibleLottieLogger: NSObject {
 
   // MARK: Lifecycle
   
+  @objc
   static func overrideLottieLogger()
   {
     LottieLogger.shared =  LottieLogger(assert: { condition, message, file, line in }, assertionFailure: { message, file, line in })

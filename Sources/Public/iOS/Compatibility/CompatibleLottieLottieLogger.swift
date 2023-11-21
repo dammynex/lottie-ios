@@ -8,6 +8,7 @@
 import Foundation
 /// An Objective-C compatible wrapper around Lottie's AnimationKeypath
 @objc
+@objcMembers
 public final class CompatibleLottieLogger: NSObject {
 
   // MARK: Lifecycle

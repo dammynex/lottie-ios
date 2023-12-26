@@ -182,7 +182,7 @@ public enum CompatibleBackgroundBehavior: Int {
 
 /// An Objective-C compatible wrapper around Lottie's LottieAnimationView.
 @objc
-public final class CompatibleAnimationView: UIView {
+public final class LottieCompatibleAnimationView: UIView {
 
   // MARK: Lifecycle
 
